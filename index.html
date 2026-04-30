@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>SE:Grocery — Map Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0b;--bg2:#141410;--bg3:#1c1c17;
+  --bdr:#2e2d26;--bdr2:#3d3c34;
+  --ac:#f0c040;--ac2:#e07030;
+  --tx:#ddd8c8;--txd:#7a7560;--txm:#45443c;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:'Barlow',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none;}
+.topbar{display:flex;align-items:center;border-bottom:1px solid var(--bdr);height:44px;flex-shrink:0;background:var(--bg2);overflow-x:auto;overflow-y:hidden;}
+.tlogo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding:0 14px;border-right:1px solid var(--bdr);height:100%;display:flex;align-items:center;flex-shrink:0;}
+.tlogo span{color:var(--ac);}
+.tsec{display:flex;align-items:center;height:100%;border-right:1px solid var(--bdr);padding:0 8px;gap:4px;flex-shrink:0;}
+.tlabel{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--txm);text-transform:uppercase;padding-right:4px;white-space:nowrap;}
+.tb{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border:1px solid var(--bdr2);background:transparent;color:var(--txd);cursor:pointer;transition:all .1s;white-space:nowrap;}
+.tb:hover{border-color:var(--ac);color:var(--tx);}
+.tb.on{background:var(--ac);color:#111;border-color:var(--ac);}
+.tb.gen{background:linear-gradient(90deg,#1a3a1a,#0f2a0f);border-color:#4a8a4a;color:#6dcf7a;}
+.tb.gen:hover{background:linear-gradient(90deg,#254a25,#1a3a1a);}
+.tb.del{border-color:#993333;color:#cc4444;}
+.tb.del:hover{background:#993333;color:#fff;}
+.mni{font-family:'Share Tech Mono',monospace;font-size:11px;background:transparent;border:1px solid var(--bdr2);color:var(--tx);padding:3px 7px;outline:none;width:155px;}
+.mni:focus{border-color:var(--ac);}
+.tsel{font-family:'Barlow Condensed',sans-serif;font-size:10px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:3px 5px;cursor:pointer;}
+.tright{margin-left:auto;display:flex;align-items:center;height:100%;padding:0 12px;gap:8px;border-left:1px solid var(--bdr);flex-shrink:0;}
+.coords{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txm);min-width:80px;}
+
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* PALETTE */
+.pal{width:182px;flex-shrink:0;border-right:1px solid var(--bdr);background:var(--bg2);display:flex;flex-direction:column;overflow-y:auto;}
+.psec{border-bottom:1px solid var(--bdr);padding:7px 0 3px;}
+.ptitle{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--txm);text-transform:uppercase;padding:0 10px 5px;}
+.pitem{display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;transition:background .1s;border-left:3px solid transparent;}
+.pitem:hover{background:rgba(255,255,255,0.03);}
+.pitem.sel{background:rgba(240,192,64,0.07);border-left-color:var(--ac);}
+.psw{width:22px;height:16px;border-radius:1px;flex-shrink:0;}
+.pname{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;color:var(--tx);}
+.pdesc{font-size:9px;color:var(--txd);line-height:1.3;}
+
+/* CANVAS */
+.cvwrap{flex:1;position:relative;overflow:hidden;background:var(--bg);cursor:crosshair;}
+#cv{position:absolute;top:0;left:0;}
+
+/* RIGHT PANEL */
+.rpan{width:210px;flex-shrink:0;border-left:1px solid var(--bdr);background:var(--bg2);display:flex;flex-direction:column;overflow-y:auto;}
+.rsec{border-bottom:1px solid var(--bdr);padding:10px;}
+.rtitle{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--txm);text-transform:uppercase;margin-bottom:6px;}
+.prow{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.plabel{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--txd);text-transform:uppercase;}
+.pinput{font-family:'Share Tech Mono',monospace;font-size:10px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:3px 6px;outline:none;width:78px;text-align:right;}
+.pinput:focus{border-color:var(--ac);}
+.psel{font-family:'Barlow Condensed',sans-serif;font-size:10px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:3px 5px;outline:none;width:100%;margin-top:3px;cursor:pointer;}
+.ptxt{font-family:'Barlow',sans-serif;font-size:10px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:5px 7px;outline:none;width:100%;resize:vertical;min-height:46px;margin-top:3px;line-height:1.5;}
+.ptxt:focus{border-color:var(--ac);}
+.nosel{font-size:11px;color:var(--txm);line-height:1.75;}
+.lgrow{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.lgsw{width:11px;height:11px;border-radius:1px;flex-shrink:0;}
+.lgtx{font-size:10px;color:var(--txd);}
+.crow{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.cprev{width:26px;height:18px;border:1px solid var(--bdr2);cursor:pointer;flex-shrink:0;}
+.ccode{font-family:'Share Tech Mono',monospace;font-size:10px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:2px 5px;outline:none;width:70px;}
+.ccode:focus{border-color:var(--ac);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bdr2);}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ac);color:#111;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 18px;opacity:0;transition:all .22s;pointer-events:none;z-index:9999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:none;align-items:center;justify-content:center;}
+.moverlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--bdr2);padding:22px;width:330px;max-width:90vw;}
+.mtitle{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--ac);margin-bottom:5px;}
+.msub{font-size:11px;color:var(--txd);margin-bottom:14px;line-height:1.6;}
+.mrow{margin-bottom:9px;}
+.mlabel{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txd);text-transform:uppercase;margin-bottom:3px;}
+.msel{font-family:'Barlow Condensed',sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--bdr2);color:var(--tx);padding:5px 7px;width:100%;cursor:pointer;}
+.mbtns{display:flex;gap:8px;margin-top:14px;}
+.mbtn{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px;border:none;cursor:pointer;}
+.mbtn.ok{background:var(--ac);color:#111;}
+.mbtn.cancel{background:transparent;border:1px solid var(--bdr2);color:var(--txd);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tlogo">SE:<span>Grocery</span></div>
+  <div class="tsec">
+    <input class="mni" id="mapname" value="Stage 1-1 West Produce" placeholder="Map Name">
+  </div>
+  <div class="tsec">
+    <span class="tlabel">Tool</span>
+    <button class="tb on" id="t-place" onclick="setTool('place',this)">PLACE</button>
+    <button class="tb" id="t-select" onclick="setTool('select',this)">SELECT</button>
+    <button class="tb" id="t-connect" onclick="setTool('connect',this)">CONNECT</button>
+    <button class="tb" id="t-delete" onclick="setTool('delete',this)">DELETE</button>
+  </div>
+  <div class="tsec">
+    <span class="tlabel">Grid</span>
+    <button class="tb on" id="snapbtn" onclick="toggleSnap(this)">SNAP</button>
+    <select class="tsel" id="gsize" onchange="gridSize=parseInt(this.value);redraw()">
+      <option value="32">32</option><option value="40">40</option>
+      <option value="48">48</option><option value="60" selected>60</option><option value="80">80</option>
+    </select>
+  </div>
+  <div class="tsec">
+    <span class="tlabel">Random</span>
+    <button class="tb gen" onclick="openModal()">&#x27F3; GEN ROOM</button>
+    <select class="tsel" id="genstyle">
+      <option value="roboquest">Roboquest</option>
+      <option value="gunfire">Gunfire Reborn</option>
+      <option value="mixed">Mixed</option>
+    </select>
+  </div>
+  <div class="tsec">
+    <button class="tb" onclick="clearAll()">CLEAR</button>
+    <button class="tb" onclick="exportJSON()">EXPORT</button>
+    <button class="tb" onclick="importJSON()">IMPORT</button>
+  </div>
+  <div class="tsec">
+    <span class="tlabel">Zoom</span>
+    <button class="tb" onclick="zoom(-0.1)">&#x2212;</button>
+    <span id="zlabel" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txd);min-width:34px;text-align:center;">100%</span>
+    <button class="tb" onclick="zoom(0.1)">+</button>
+    <button class="tb" onclick="resetView()">FIT</button>
+  </div>
+  <div class="tright"><span class="coords" id="coords">x:0 y:0</span></div>
+</div>
+
+<div class="workspace">
+
+<div class="pal" id="palette">
+  <div class="psec">
+    <div class="ptitle">공간</div>
+    <div class="pitem sel" data-type="room"><div class="psw" style="background:#1e2820;border:2px solid #3a5c3a"></div><div><div class="pname">Room</div><div class="pdesc">전투 공간</div></div></div>
+    <div class="pitem" data-type="corridor"><div class="psw" style="background:#1a1a22;border:2px solid #34345a"></div><div><div class="pname">Corridor</div><div class="pdesc">복도·통로</div></div></div>
+    <div class="pitem" data-type="safe"><div class="psw" style="background:#0f1f10;border:2px solid #33aa44"></div><div><div class="pname">Safe Zone</div><div class="pdesc">거점·보상</div></div></div>
+    <div class="pitem" data-type="start"><div class="psw" style="background:#1a1a08;border:2px solid #aaaa22"></div><div><div class="pname">Start</div><div class="pdesc">시작점</div></div></div>
+    <div class="pitem" data-type="end"><div class="psw" style="background:#1f0f20;border:2px solid #aa33cc"></div><div><div class="pname">Exit</div><div class="pdesc">출구</div></div></div>
+    <div class="pitem" data-type="secret"><div class="psw" style="background:#081820;border:2px solid #22aacc"></div><div><div class="pname">Secret</div><div class="pdesc">숨겨진 구역</div></div></div>
+  </div>
+  <div class="psec">
+    <div class="ptitle">웨이브 시스템</div>
+    <div class="pitem" data-type="wave"><div class="psw" style="background:#2a1a10;border:2px solid #d06020"></div><div><div class="pname">Wave Trigger</div><div class="pdesc">웨이브 발동</div></div></div>
+    <div class="pitem" data-type="spawn"><div class="psw" style="background:#0f1a28;border:2px solid #2255aa"></div><div><div class="pname">Spawn Point</div><div class="pdesc">Spoil 스폰</div></div></div>
+    <div class="pitem" data-type="lockwall"><div class="psw" style="background:#1a0a0a;border:2px solid #cc2222"></div><div><div class="pname">Lock Wall</div><div class="pdesc">웨이브 잠금</div></div></div>
+    <div class="pitem" data-type="door"><div class="psw" style="background:#201808;border:2px solid #cc9922"></div><div><div class="pname">Door</div><div class="pdesc">통과 문</div></div></div>
+  </div>
+  <div class="psec">
+    <div class="ptitle">벽 / 엄폐</div>
+    <div class="pitem" data-type="wall_low"><div class="psw" style="background:#2a2218;border:2px solid #8a7040"></div><div><div class="pname">Low Wall</div><div class="pdesc">엄폐·사격 가능</div></div></div>
+    <div class="pitem" data-type="wall_high"><div class="psw" style="background:#1a1a1a;border:2px solid #888888"></div><div><div class="pname">High Wall</div><div class="pdesc">완전 차단</div></div></div>
+    <div class="pitem" data-type="wall_dest"><div class="psw" style="background:#1e1208;border:2px solid #aa5522"></div><div><div class="pname">Dest. Wall</div><div class="pdesc">파괴 가능</div></div></div>
+    <div class="pitem" data-type="cover"><div class="psw" style="background:#1a2a1a;border:2px solid #44aa44"></div><div><div class="pname">Cover Object</div><div class="pdesc">이동식 엄폐</div></div></div>
+    <div class="pitem" data-type="pillar"><div class="psw" style="background:#202020;border:2px solid #aaaaaa"></div><div><div class="pname">Pillar</div><div class="pdesc">기둥</div></div></div>
+  </div>
+  <div class="psec">
+    <div class="ptitle">수직 구조</div>
+    <div class="pitem" data-type="platform"><div class="psw" style="background:#101828;border:2px solid #3366cc"></div><div><div class="pname">Platform 2F</div><div class="pdesc">2층 플랫폼</div></div></div>
+    <div class="pitem" data-type="stair"><div class="psw" style="background:#181820;border:2px solid #5566aa"></div><div><div class="pname">Stair</div><div class="pdesc">계단</div></div></div>
+    <div class="pitem" data-type="ramp"><div class="psw" style="background:#181822;border:2px solid #446688"></div><div><div class="pname">Ramp</div><div class="pdesc">경사로</div></div></div>
+    <div class="pitem" data-type="dropzone"><div class="psw" style="background:#201010;border:2px solid #884422"></div><div><div class="pname">Drop Zone</div><div class="pdesc">낙하 지점</div></div></div>
+  </div>
+  <div class="psec">
+    <div class="ptitle">오브젝트</div>
+    <div class="pitem" data-type="hazard"><div class="psw" style="background:#1a1008;border:2px solid #dd6600"></div><div><div class="pname">Hazard</div><div class="pdesc">위험 지형</div></div></div>
+    <div class="pitem" data-type="prop_dest"><div class="psw" style="background:#1a1410;border:2px solid #886644"></div><div><div class="pname">Dest. Prop</div><div class="pdesc">파괴 소품</div></div></div>
+    <div class="pitem" data-type="vent"><div class="psw" style="background:#101a18;border:2px solid #448866"></div><div><div class="pname">Vent Panel</div><div class="pdesc">환기구</div></div></div>
+    <div class="pitem" data-type="checkpoint"><div class="psw" style="background:#0f1820;border:2px solid #2288cc"></div><div><div class="pname">Checkpoint</div><div class="pdesc">체크포인트</div></div></div>
+    <div class="pitem" data-type="loot"><div class="psw" style="background:#1a1808;border:2px solid #ccaa22"></div><div><div class="pname">Loot Cache</div><div class="pdesc">보상 상자</div></div></div>
+  </div>
+</div>
+
+<div class="cvwrap" id="cvwrap"><canvas id="cv"></canvas></div>
+
+<div class="rpan">
+  <div class="rsec">
+    <div class="rtitle">Properties</div>
+    <div id="proppanel"><div class="nosel">요소를 선택하면<br>속성이 표시됩니다.<br><br><b style="color:var(--txd)">CONNECT</b>로<br>Wave &rarr; Lock Wall<br>연동 설정<br><br><b style="color:var(--txd)">우클릭</b>: 선택 해제</div></div>
+  </div>
+  <div class="rsec">
+    <div class="rtitle">Connections</div>
+    <div id="connlist" style="font-size:10px;color:var(--txm);">연결 없음</div>
+  </div>
+  <div class="rsec">
+    <div class="rtitle">Legend</div>
+    <div class="lgrow"><div class="lgsw" style="background:#3a5c3a"></div><div class="lgtx">Room / Safe / Space</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#d06020"></div><div class="lgtx">Wave Trigger</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#cc2222"></div><div class="lgtx">Lock Wall</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#8a7040;border-top:1px dashed #f0c040"></div><div class="lgtx">Low Wall (사격 가능)</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#888888"></div><div class="lgtx">High Wall</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#aa5522"></div><div class="lgtx">Destruct Wall</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#3366cc"></div><div class="lgtx">Platform 2F</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#5566aa"></div><div class="lgtx">Stair / Ramp</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#dd6600"></div><div class="lgtx">Hazard</div></div>
+    <div class="lgrow"><div class="lgsw" style="background:#ccaa22"></div><div class="lgtx">Loot Cache</div></div>
+  </div>
+  <div class="rsec">
+    <div class="rtitle">Stats</div>
+    <div id="statsbox" style="font-size:10px;color:var(--txd);font-family:'Share Tech Mono',monospace;line-height:1.8;"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="moverlay" id="modal">
+  <div class="modal">
+    <div class="mtitle">&#x27F3; Map Flow Generator</div>
+    <div class="msub">복수의 방과 복도로 이어진 전체 맵 플로우를<br>자동으로 생성합니다. L4D2 / Deep Rock 패턴 기반.</div>
+    <div class="mrow"><div class="mlabel">레이아웃 패턴</div>
+      <select class="msel" id="mod-style">
+        <option value="linear">Linear — 직선형 (L4D2 스타일)</option>
+        <option value="corner">Corner — 코너 꺾임 (골목·냉동 통로)</option>
+        <option value="branch" selected>Branch — 분기형 (선택 경로)</option>
+        <option value="loop">Loop — 루프형 (순환 동선)</option>
+        <option value="cross">Cross — 십자형 (창고 대형)</option>
+      </select></div>
+    <div class="mrow"><div class="mlabel">전체 맵 규모</div>
+      <select class="msel" id="mod-size">
+        <option value="short">Short — 방 3~4개</option>
+        <option value="medium" selected>Medium — 방 5~6개</option>
+        <option value="long">Long — 방 7~9개</option>
+      </select></div>
+    <div class="mrow"><div class="mlabel">방 내부 스타일</div>
+      <select class="msel" id="mod-roomstyle">
+        <option value="roboquest" selected>Roboquest — 선형 엄폐 배치</option>
+        <option value="gunfire">Gunfire Reborn — 오픈 아레나</option>
+        <option value="mixed">Mixed — 랜덤 혼합</option>
+      </select></div>
+    <div class="mrow"><div class="mlabel">수직 구조</div>
+      <select class="msel" id="mod-vert">
+        <option value="flat">Flat — 단층</option>
+        <option value="partial" selected>Partial — 부분 2층</option>
+        <option value="full">Full — 전체 2층</option>
+      </select></div>
+    <div class="mrow"><div class="mlabel">밀도</div>
+      <select class="msel" id="mod-density">
+        <option value="sparse">Sparse</option>
+        <option value="normal" selected>Normal</option>
+        <option value="dense">Dense</option>
+      </select></div>
+    <div class="mbtns">
+      <button class="mbtn ok" id="mod-ok">GENERATE</button>
+      <button class="mbtn cancel" id="mod-cancel">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────── CONSTANTS ───────────────────────────────
+var T = {
+  room:     {w:4,h:3,lbl:'Room',       bg:'#1e2820',br:'#3a5c3a',tx:'#6dcf7a',layer:'space',cc:false},
+  corridor: {w:1,h:3,lbl:'Corridor',   bg:'#1a1a22',br:'#34345a',tx:'#5b7fd4',layer:'space',cc:false},
+  safe:     {w:3,h:2,lbl:'Safe Zone',  bg:'#0f1f10',br:'#33aa44',tx:'#55dd66',layer:'space',cc:false},
+  start:    {w:2,h:2,lbl:'START',      bg:'#1a1a08',br:'#aaaa22',tx:'#dddd44',layer:'space',cc:false},
+  end:      {w:2,h:2,lbl:'EXIT',       bg:'#1f0f20',br:'#aa33cc',tx:'#cc55ee',layer:'space',cc:false},
+  secret:   {w:3,h:2,lbl:'SECRET',     bg:'#081820',br:'#22aacc',tx:'#44ccee',layer:'space',cc:false},
+  wave:     {w:2,h:2,lbl:'WAVE',       bg:'#2a1a10',br:'#d06020',tx:'#ee8844',layer:'trigger',cc:false},
+  spawn:    {w:1,h:1,lbl:'Spawn',      bg:'#0f1a28',br:'#2255aa',tx:'#4488ee',layer:'trigger',cc:false},
+  lockwall: {w:1,h:2,lbl:'LOCK',       bg:'#1a0a0a',br:'#cc2222',tx:'#ee4444',layer:'trigger',cc:false},
+  door:     {w:1,h:1,lbl:'Door',       bg:'#201808',br:'#cc9922',tx:'#ddbb44',layer:'trigger',cc:false},
+  wall_low: {w:2,h:1,lbl:'Low Wall',   bg:'#2a2218',br:'#8a7040',tx:'#ccaa66',layer:'geo',cc:true},
+  wall_high:{w:2,h:1,lbl:'High Wall',  bg:'#1a1a1a',br:'#888888',tx:'#bbbbbb',layer:'geo',cc:true},
+  wall_dest:{w:2,h:1,lbl:'Dest.Wall',  bg:'#1e1208',br:'#aa5522',tx:'#cc7744',layer:'geo',cc:true},
+  cover:    {w:1,h:1,lbl:'Cover',      bg:'#1a2a1a',br:'#44aa44',tx:'#66cc66',layer:'geo',cc:true},
+  pillar:   {w:1,h:1,lbl:'Pillar',     bg:'#202020',br:'#aaaaaa',tx:'#cccccc',layer:'geo',cc:true},
+  platform: {w:3,h:2,lbl:'Platform 2F',bg:'#101828',br:'#3366cc',tx:'#5588ee',layer:'vert',cc:false},
+  stair:    {w:1,h:2,lbl:'Stair',      bg:'#181820',br:'#5566aa',tx:'#7788cc',layer:'vert',cc:false},
+  ramp:     {w:2,h:1,lbl:'Ramp',       bg:'#181822',br:'#446688',tx:'#6688aa',layer:'vert',cc:false},
+  dropzone: {w:1,h:1,lbl:'Drop',       bg:'#201010',br:'#884422',tx:'#aa6644',layer:'vert',cc:false},
+  hazard:   {w:2,h:1,lbl:'Hazard',     bg:'#1a1008',br:'#dd6600',tx:'#ff8822',layer:'obj',cc:false},
+  prop_dest:{w:1,h:1,lbl:'Prop',       bg:'#1a1410',br:'#886644',tx:'#aa8866',layer:'obj',cc:false},
+  vent:     {w:1,h:1,lbl:'Vent',       bg:'#101a18',br:'#448866',tx:'#66aa88',layer:'obj',cc:false},
+  checkpoint:{w:1,h:1,lbl:'Check',     bg:'#0f1820',br:'#2288cc',tx:'#44aaee',layer:'obj',cc:false},
+  loot:     {w:1,h:1,lbl:'Loot',       bg:'#1a1808',br:'#ccaa22',tx:'#eedd44',layer:'obj',cc:false}
+};
+var LAYER_ORDER = ['space','geo','vert','obj','trigger'];
+
+// ─────────────────────── STATE ────────────────────────────────────
+var nodes = [], conns = [];
+var selType = 'room';
+var tool = 'place';
+var snapOn = true;
+var gridSize = 60;
+var scale = 1, offX = 0, offY = 0;
+var selNode = null;
+var connFrom = null;
+var drag = null, dragDX = 0, dragDY = 0;
+var panDrag = false;
+var lastMX = 0, lastMY = 0;
+var mouseX = 0, mouseY = 0;
+var uid = 1;
+
+// ─────────────────────── CANVAS ───────────────────────────────────
+var cv = document.getElementById('cv');
+var ctx = cv.getContext('2d');
+var wrap = document.getElementById('cvwrap');
+
+function resize() { cv.width = wrap.clientWidth; cv.height = wrap.clientHeight; redraw(); }
+window.addEventListener('resize', resize);
+
+// ─────────────────────── DRAW ─────────────────────────────────────
+function redraw() {
+  var W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0d0d0b'; ctx.fillRect(0,0,W,H);
+  drawGrid();
+  conns.forEach(drawConn);
+  LAYER_ORDER.forEach(function(layer) {
+    nodes.filter(function(n){ return T[n.type].layer === layer; }).forEach(drawNode);
+  });
+  if (tool === 'connect' && connFrom) drawConnPreview();
+  if (tool === 'place') drawGhost();
+  updateStats();
+}
+
+function drawGrid() {
+  var gs = gridSize * scale;
+  var ox = ((offX % gs) + gs) % gs;
+  var oy = ((offY % gs) + gs) % gs;
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+  for (var x = ox; x < cv.width; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cv.height); ctx.stroke(); }
+  for (var y = oy; y < cv.height; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cv.width,y); ctx.stroke(); }
+  ctx.restore();
+}
+
+function nodeColors(n) {
+  var cfg = T[n.type];
+  return { bg: n.cBg || cfg.bg, br: n.cBr || cfg.br, tx: n.cTx || cfg.tx };
+}
+
+function sx(wx) { return wx * scale + offX; }
+function sy(wy) { return wy * scale + offY; }
+function sw(w)  { return w * gridSize * scale; }
+function sh(h)  { return h * gridSize * scale; }
+
+function rr(x,y,w,h,r) {
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+}
+
+function drawNode(n) {
+  var cfg = T[n.type];
+  var c = nodeColors(n);
+  var X = sx(n.x), Y = sy(n.y), W = sw(n.w), H = sh(n.h);
+  var isSel = selNode && selNode.id === n.id;
+  var isCF  = connFrom === n.id;
+  ctx.save();
+  if (isSel || isCF) { ctx.shadowColor = isCF ? '#f0c040' : c.br; ctx.shadowBlur = 12; }
+
+  // Special fills
+  if (n.type === 'platform') {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,3*scale); ctx.fill();
+    ctx.save(); ctx.clip(); ctx.globalAlpha = 0.15; ctx.strokeStyle = c.br; ctx.lineWidth = 1;
+    for (var i = -H; i < W+H; i += 8*scale) { ctx.beginPath(); ctx.moveTo(X+i,Y); ctx.lineTo(X+i+H,Y+H); ctx.stroke(); }
+    ctx.restore();
+  } else if (n.type === 'stair') {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,2*scale); ctx.fill();
+    ctx.save(); ctx.globalAlpha = 0.45; ctx.strokeStyle = c.br; ctx.lineWidth = 1.5;
+    var steps = Math.max(3, Math.round(H / (12*scale)));
+    for (var s = 0; s <= steps; s++) {
+      var fy = Y + H*(s/steps);
+      ctx.beginPath(); ctx.moveTo(X,fy); ctx.lineTo(X + W*(s/steps), fy); ctx.stroke();
+    }
+    ctx.restore();
+  } else if (n.type === 'ramp') {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,2*scale); ctx.fill();
+    ctx.save(); ctx.globalAlpha = 0.45; ctx.strokeStyle = c.br; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X, Y+H); ctx.lineTo(X+W, Y); ctx.stroke();
+    ctx.restore();
+  } else if (n.type === 'wall_low') {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,2*scale); ctx.fill();
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.strokeStyle = c.br; ctx.lineWidth = 1;
+    for (var xi = 0; xi < W; xi += 5*scale) { ctx.beginPath(); ctx.moveTo(X+xi,Y); ctx.lineTo(X+xi,Y+H); ctx.stroke(); }
+    ctx.restore();
+    // sightline indicator
+    ctx.save(); ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.45; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(X,Y); ctx.lineTo(X+W,Y); ctx.stroke(); ctx.restore();
+  } else if (n.type === 'hazard') {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,2*scale); ctx.fill();
+    ctx.save(); ctx.clip(); ctx.globalAlpha = 0.28;
+    var st = 7*scale;
+    for (var xi2 = -H; xi2 < W+H; xi2 += st*2) { ctx.fillStyle = '#dd6600'; ctx.fillRect(X+xi2,Y,st,H+H); }
+    ctx.restore();
+  } else {
+    ctx.fillStyle = c.bg; ctx.beginPath(); rr(X,Y,W,H,3*scale); ctx.fill();
+    if (n.type === 'lockwall') ctx.setLineDash([5*scale, 3*scale]);
+  }
+
+  ctx.strokeStyle = isSel ? '#f0c040' : (isCF ? '#f0c040' : c.br);
+  ctx.lineWidth = isSel ? 2 : 1.5;
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); rr(X,Y,W,H,3*scale); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Symbols
+  if (n.type === 'wave')       drawWaveSym(X,Y,W,H,c.br);
+  if (n.type === 'spawn')      drawSpawnSym(X,Y,W,H,c.br);
+  if (n.type === 'lockwall')   drawLockSym(X,Y,W,H,c.tx);
+  if (n.type === 'loot')       drawLootSym(X,Y,W,H,c.tx);
+  if (n.type === 'checkpoint') drawCheckSym(X,Y,W,H,c.tx);
+  if (n.type === 'vent')       drawVentSym(X,Y,W,H,c.br);
+
+  // Label
+  if (W > 28*scale && H > 16*scale) {
+    var fs = Math.max(8, 10*scale);
+    ctx.font = '700 ' + fs + 'px Barlow Condensed';
+    ctx.fillStyle = c.tx; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var lbl = (n.lbl || cfg.lbl); if (lbl.length > 13) lbl = lbl.slice(0,11) + '\u2026';
+    ctx.fillText(lbl, X+W/2, Y+H/2);
+    if (n.type === 'wave' && n.waveNum) {
+      ctx.font = '700 ' + Math.max(7,9*scale) + 'px Share Tech Mono';
+      ctx.fillStyle = '#f0c040';
+      ctx.fillText('W' + n.waveNum, X+W/2, Y+H/2 + fs*1.1);
+    }
+  }
+  if (W > 22*scale) {
+    ctx.font = '600 ' + Math.max(6,8*scale) + 'px Barlow Condensed';
+    ctx.fillStyle = 'rgba(255,255,255,0.14)'; ctx.textAlign = 'left';
+    ctx.fillText('#' + n.id, X+3*scale, Y+9*scale);
+  }
+  ctx.restore();
+}
+
+function drawWaveSym(X,Y,W,H,col) {
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=1; ctx.globalAlpha=0.38;
+  var cx=X+W/2,cy=Y+H/2,r=Math.min(W,H)*0.28;
+  for(var i=0;i<3;i++){ctx.beginPath();ctx.arc(cx,cy,r*(0.45+i*0.27),0,Math.PI*2);ctx.stroke();}
+  ctx.restore();
+}
+function drawSpawnSym(X,Y,W,H,col) {
+  ctx.save(); ctx.fillStyle=col; ctx.globalAlpha=0.32;
+  ctx.beginPath(); ctx.arc(X+W/2,Y+H/2,Math.min(W,H)*0.3,0,Math.PI*2); ctx.fill(); ctx.restore();
+}
+function drawLockSym(X,Y,W,H,col) {
+  ctx.save(); var cx=X+W/2,cy=Y+H/2,s=Math.min(W,H)*0.17;
+  ctx.fillStyle=col; ctx.globalAlpha=0.26; ctx.fillRect(cx-s,cy-s*0.3,s*2,s*1.4);
+  ctx.strokeStyle=col; ctx.lineWidth=s*0.4; ctx.globalAlpha=0.28;
+  ctx.beginPath(); ctx.arc(cx,cy-s*0.3,s,Math.PI,0); ctx.stroke(); ctx.restore();
+}
+function drawLootSym(X,Y,W,H,col) {
+  ctx.save(); ctx.fillStyle=col; ctx.globalAlpha=0.48;
+  var cx=X+W/2,cy=Y+H/2,s=Math.min(W,H)*0.22;
+  ctx.beginPath(); ctx.moveTo(cx,cy-s); ctx.lineTo(cx+s,cy+s*0.5); ctx.lineTo(cx-s,cy+s*0.5);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function drawCheckSym(X,Y,W,H,col) {
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.globalAlpha=0.55;
+  var cx=X+W/2,cy=Y+H/2,s=Math.min(W,H)*0.22;
+  ctx.beginPath(); ctx.moveTo(cx-s,cy); ctx.lineTo(cx-s*0.2,cy+s); ctx.lineTo(cx+s,cy-s); ctx.stroke(); ctx.restore();
+}
+function drawVentSym(X,Y,W,H,col) {
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=1; ctx.globalAlpha=0.45;
+  var pad=3*scale;
+  for(var r=0;r<3;r++){
+    ctx.beginPath(); ctx.moveTo(X+pad, Y+pad+r*(H-pad*2)/2); ctx.lineTo(X+W-pad, Y+pad+r*(H-pad*2)/2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawConn(c) {
+  var a = nodes.find(function(n){ return n.id === c.from; });
+  var b = nodes.find(function(n){ return n.id === c.to; });
+  if (!a || !b) return;
+  var ax = sx(a.x) + sw(a.w)/2, ay = sy(a.y) + sh(a.h)/2;
+  var bx = sx(b.x) + sw(b.w)/2, by = sy(b.y) + sh(b.h)/2;
+  var mx = (ax+bx)/2;
+  ctx.save();
+  ctx.strokeStyle='#d06020'; ctx.lineWidth=1.5; ctx.setLineDash([6*scale,4*scale]); ctx.globalAlpha=0.65;
+  ctx.beginPath(); ctx.moveTo(ax,ay); ctx.bezierCurveTo(mx,ay,mx,by,bx,by); ctx.stroke();
+  var ang = Math.atan2(by-ay, bx-ax), al = 7*scale;
+  ctx.setLineDash([]); ctx.globalAlpha=0.8;
+  ctx.beginPath(); ctx.moveTo(bx,by);
+  ctx.lineTo(bx-al*Math.cos(ang-0.35), by-al*Math.sin(ang-0.35));
+  ctx.lineTo(bx-al*Math.cos(ang+0.35), by-al*Math.sin(ang+0.35));
+  ctx.closePath(); ctx.fillStyle='#d06020'; ctx.fill();
+  ctx.font='700 '+(Math.max(8,9*scale))+'px Barlow Condensed';
+  ctx.fillStyle='#ee8844'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.globalAlpha=0.88;
+  ctx.fillText('UNLOCK', mx, (ay+by)/2 - 7*scale);
+  ctx.restore();
+}
+
+function drawConnPreview() {
+  var a = nodes.find(function(n){ return n.id === connFrom; }); if (!a) return;
+  var ax = sx(a.x)+sw(a.w)/2, ay = sy(a.y)+sh(a.h)/2;
+  ctx.save(); ctx.strokeStyle='#f0c040'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]); ctx.globalAlpha=0.55;
+  ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(mouseX,mouseY); ctx.stroke(); ctx.restore();
+}
+
+function drawGhost() {
+  var cfg = T[selType];
+  var ww = s2w(mouseX, mouseY);
+  var gx = snap(ww.x - cfg.w*gridSize/2), gy = snap(ww.y - cfg.h*gridSize/2);
+  var X=sx(gx),Y=sy(gy),W=sw(cfg.w),H=sh(cfg.h);
+  ctx.save(); ctx.globalAlpha=0.3; ctx.fillStyle=cfg.bg; ctx.strokeStyle=cfg.br; ctx.lineWidth=1.5;
+  ctx.beginPath(); rr(X,Y,W,H,3*scale); ctx.fill(); ctx.stroke();
+  ctx.globalAlpha=0.52; ctx.font='700 '+(Math.max(8,10*scale))+'px Barlow Condensed';
+  ctx.fillStyle=cfg.tx; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(cfg.lbl, X+W/2, Y+H/2);
+  ctx.restore();
+}
+
+// ─────────────────────── COORD HELPERS ───────────────────────────
+function s2w(px, py) { return { x:(px-offX)/scale, y:(py-offY)/scale }; }
+function snap(v) { return snapOn ? Math.round(v/gridSize)*gridSize : v; }
+function hitTest(wx,wy) {
+  for (var i=nodes.length-1; i>=0; i--) {
+    var n = nodes[i];
+    if (wx>=n.x && wx<=n.x+n.w*gridSize && wy>=n.y && wy<=n.y+n.h*gridSize) return n;
+  }
+  return null;
+}
+
+// ─────────────────────── EVENTS ───────────────────────────────────
+function getCP(e) { var r=cv.getBoundingClientRect(); return {mx:e.clientX-r.left, my:e.clientY-r.top}; }
+
+cv.addEventListener('mousemove', function(e) {
+  var p = getCP(e); mouseX=p.mx; mouseY=p.my;
+  var w = s2w(p.mx,p.my);
+  document.getElementById('coords').textContent = 'x:'+Math.round(w.x/gridSize)+' y:'+Math.round(w.y/gridSize);
+  if (panDrag) { offX += p.mx-lastMX; offY += p.my-lastMY; }
+  else if (drag) { var ww=s2w(p.mx,p.my); drag.x=snap(ww.x-dragDX); drag.y=snap(ww.y-dragDY); }
+  lastMX=p.mx; lastMY=p.my;
+  redraw();
+});
+
+cv.addEventListener('mousedown', function(e) {
+  var p = getCP(e);
+  if (e.button===2) { selNode=null; connFrom=null; renderProp(); redraw(); return; }
+  if (e.button===1) { panDrag=true; return; }
+  var w = s2w(p.mx,p.my);
+  var hit = hitTest(w.x,w.y);
+  if (tool==='place') {
+    if (!hit) placeNode(w.x,w.y); else { selNode=hit; renderProp(); }
+  } else if (tool==='select') {
+    if (hit) { selNode=hit; drag=hit; dragDX=w.x-hit.x; dragDY=w.y-hit.y; renderProp(); }
+    else { selNode=null; panDrag=true; renderProp(); }
+  } else if (tool==='connect') {
+    if (hit) {
+      if (!connFrom) { connFrom=hit.id; toast('FROM: '+(hit.lbl||T[hit.type].lbl)); }
+      else { if (connFrom!==hit.id) conns.push({from:connFrom,to:hit.id}); connFrom=null; renderConnList(); toast('연결 완료'); }
+    }
+  } else if (tool==='delete') {
+    if (hit) { nodes=nodes.filter(function(n){return n.id!==hit.id;}); conns=conns.filter(function(c){return c.from!==hit.id&&c.to!==hit.id;}); if(selNode&&selNode.id===hit.id){selNode=null;renderProp();} renderConnList(); }
+  }
+  redraw();
+});
+
+cv.addEventListener('mouseup', function() { panDrag=false; drag=null; });
+cv.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+cv.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  var p=getCP(e), d=e.deltaY>0?-0.08:0.08;
+  var ps=scale; scale=Math.max(0.25,Math.min(3,scale+d));
+  offX=p.mx-(p.mx-offX)*(scale/ps); offY=p.my-(p.my-offY)*(scale/ps);
+  document.getElementById('zlabel').textContent=Math.round(scale*100)+'%';
+  redraw();
+}, {passive:false});
+
+// ─────────────────────── PLACE ────────────────────────────────────
+function placeNode(wx,wy) {
+  var cfg = T[selType];
+  var n = {
+    id:uid++, type:selType,
+    x:snap(wx-cfg.w*gridSize/2), y:snap(wy-cfg.h*gridSize/2),
+    w:cfg.w, h:cfg.h,
+    lbl:cfg.lbl, note:'',
+    waveNum: selType==='wave' ? nodes.filter(function(n){return n.type==='wave';}).length+1 : null,
+    spoilType:'runner', waveCount:2, faction:'',
+    cBg:null, cBr:null, cTx:null
+  };
+  nodes.push(n); selNode=n; renderProp();
+}
+
+// ─────────────────────── PROP PANEL ───────────────────────────────
+function renderProp() {
+  var el = document.getElementById('proppanel');
+  if (!selNode) {
+    el.innerHTML = '<div class="nosel">요소를 선택하면<br>속성이 표시됩니다.<br><br><b style="color:var(--txd)">CONNECT</b>로<br>Wave &rarr; Lock Wall<br>연동 설정<br><br><b style="color:var(--txd)">우클릭</b>: 선택 해제</div>';
+    renderConnList(); return;
+  }
+  var n = selNode, cfg = T[n.type];
+  var c = nodeColors(n);
+  // Build HTML using array + join to avoid template literal issues
+  var h = [];
+  h.push('<div style="margin-bottom:8px">');
+  h.push('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:17px;color:'+c.br+';letter-spacing:1px">'+cfg.lbl+'</div>');
+  h.push('<div style="font-size:9px;color:var(--txm);font-family:\'Share Tech Mono\',monospace">#'+n.id+'</div>');
+  h.push('</div>');
+  h.push('<div class="plabel" style="margin-bottom:3px">Name</div>');
+  h.push('<input class="pinput" id="pp-name" style="width:100%;margin-bottom:6px;text-align:left" type="text" value="'+esc(n.lbl)+'">');
+  h.push('<div class="prow"><span class="plabel">W</span><input class="pinput" id="pp-w" type="number" min="1" max="20" value="'+n.w+'"></div>');
+  h.push('<div class="prow"><span class="plabel">H</span><input class="pinput" id="pp-h" type="number" min="1" max="20" value="'+n.h+'"></div>');
+
+  if (n.type==='wave') {
+    h.push('<div class="prow"><span class="plabel">Wave #</span><input class="pinput" id="pp-wnum" type="number" min="1" value="'+(n.waveNum||1)+'"></div>');
+    h.push('<div class="plabel" style="margin-bottom:3px">Spoil Type</div>');
+    h.push('<select class="psel" id="pp-spoil">');
+    ['runner','elite','horde','boss'].forEach(function(v) {
+      h.push('<option value="'+v+'"'+(n.spoilType===v?' selected':'')+'>'+{runner:'Spoil Runner',elite:'Elite Spoil',horde:'Horde Pack',boss:'Boss Spawn'}[v]+'</option>');
+    });
+    h.push('</select>');
+    h.push('<select class="psel" id="pp-wcnt" style="margin-top:4px">');
+    [1,2,3,5].forEach(function(v){h.push('<option value="'+v+'"'+(n.waveCount===v?' selected':'')+'>'+v+' 웨이브</option>');});
+    h.push('</select>');
+  }
+
+  if (n.type==='lockwall') {
+    var linked = conns.filter(function(c2){return c2.to===n.id;}).map(function(c2){
+      var src=nodes.find(function(x){return x.id===c2.from;}); return src?('W'+(src.waveNum||'?')):'?';
+    });
+    h.push('<div class="prow"><span class="plabel">Linked Wave</span><span style="font-size:10px;color:'+(linked.length?'#ee8844':'var(--txm)')+';">'+(linked.length?linked.join(', '):'없음')+'</span></div>');
+  }
+
+  if (['room','safe','secret','platform'].indexOf(n.type)>=0) {
+    h.push('<div class="plabel" style="margin-top:4px;margin-bottom:3px">Faction</div>');
+    h.push('<select class="psel" id="pp-faction">');
+    [['','없음'],['Frostbound','Frostbound'],['Clearance','Clearance'],['P.I.','P.I.'],['Watchers','Watchers']].forEach(function(fv){
+      h.push('<option value="'+fv[0]+'"'+(!n.faction&&fv[0]===''?' selected':(n.faction===fv[0]?' selected':''))+'>'+fv[1]+'</option>');
+    });
+    h.push('</select>');
+  }
+
+  if (['wall_low','wall_high','wall_dest','cover','pillar'].indexOf(n.type)>=0) {
+    var wdesc = {wall_low:'낮은 벽 — 엄폐, 사격 가능',wall_high:'높은 벽 — 완전 차단',wall_dest:'파괴 가능 벽',cover:'이동식 엄폐물',pillar:'기둥'}[n.type]||'';
+    h.push('<div style="font-size:10px;color:#aaa;margin:5px 0;line-height:1.5">'+wdesc+'</div>');
+    if (n.type==='wall_low') h.push('<div style="font-size:10px;color:#f0c040;opacity:.8">&#9888; 플레이어 &amp; 적 모두 사격 가능</div>');
+    if (n.type==='wall_high') h.push('<div style="font-size:10px;color:#888;opacity:.8">완전 차단 — 사격 불가</div>');
+    if (n.type==='wall_dest') h.push('<div style="font-size:10px;color:#cc7744;opacity:.8">폭발/충격으로 파괴 가능</div>');
+    // Color customization - all via DOM after render
+    h.push('<div style="margin-top:7px"><div class="plabel" style="margin-bottom:5px">색상 커스텀</div>');
+    h.push('<div class="crow"><div class="cprev" id="pp-cbg" style="background:'+c.bg+'"></div><span class="plabel">Fill</span><input class="ccode" id="pp-tbg" type="text" value="'+(n.cBg||cfg.bg)+'"><input type="color" id="pp-hbg" style="opacity:0;width:0;height:0;position:absolute" value="'+(n.cBg||cfg.bg)+'"></div>');
+    h.push('<div class="crow"><div class="cprev" id="pp-cbr" style="background:'+c.br+'"></div><span class="plabel">Border</span><input class="ccode" id="pp-tbr" type="text" value="'+(n.cBr||cfg.br)+'"><input type="color" id="pp-hbr" style="opacity:0;width:0;height:0;position:absolute" value="'+(n.cBr||cfg.br)+'"></div>');
+    h.push('<div class="crow"><div class="cprev" id="pp-ctx2" style="background:'+c.tx+'"></div><span class="plabel">Label</span><input class="ccode" id="pp-ttx" type="text" value="'+(n.cTx||cfg.tx)+'"><input type="color" id="pp-htx" style="opacity:0;width:0;height:0;position:absolute" value="'+(n.cTx||cfg.tx)+'"></div>');
+    h.push('<button class="tb" id="pp-resetc" style="width:100%;margin-top:4px;font-size:9px">RESET COLOR</button>');
+    h.push('</div>');
+  }
+
+  h.push('<div class="plabel" style="margin-top:6px;margin-bottom:3px">Note</div>');
+  h.push('<textarea class="ptxt" id="pp-note">'+esc(n.note||'')+'</textarea>');
+  h.push('<button class="tb del" id="pp-del" style="width:100%;margin-top:6px;font-size:9px">DELETE NODE</button>');
+
+  el.innerHTML = h.join('');
+
+  // Attach events via DOM (no inline handlers)
+  bindI('pp-name', function(v){ selNode.lbl=v; redraw(); });
+  bindN('pp-w',    function(v){ selNode.w=v; redraw(); });
+  bindN('pp-h',    function(v){ selNode.h=v; redraw(); });
+  bindTA('pp-note',function(v){ selNode.note=v; });
+  var del = document.getElementById('pp-del');
+  if (del) del.addEventListener('click', function(){ deleteSelected(); });
+
+  if (n.type==='wave') {
+    bindN('pp-wnum', function(v){ selNode.waveNum=v; redraw(); });
+    bindSel('pp-spoil', function(v){ selNode.spoilType=v; });
+    bindN('pp-wcnt', function(v){ selNode.waveCount=v; });
+  }
+  if (['room','safe','secret','platform'].indexOf(n.type)>=0) {
+    bindSel('pp-faction', function(v){ selNode.faction=v; });
+  }
+  if (T[n.type].cc) {
+    setupColorPicker('pp-cbg','pp-hbg','pp-tbg','cBg');
+    setupColorPicker('pp-cbr','pp-hbr','pp-tbr','cBr');
+    setupColorPicker('pp-ctx2','pp-htx','pp-ttx','cTx');
+    var rc = document.getElementById('pp-resetc');
+    if (rc) rc.addEventListener('click', function(){ selNode.cBg=null; selNode.cBr=null; selNode.cTx=null; renderProp(); redraw(); });
+  }
+
+  renderConnList();
+}
+
+function setupColorPicker(prevId, inputId, textId, key) {
+  var prev = document.getElementById(prevId);
+  var inp  = document.getElementById(inputId);
+  var txt  = document.getElementById(textId);
+  if (!prev||!inp||!txt) return;
+  prev.addEventListener('click', function(){ inp.click(); });
+  inp.addEventListener('input', function(){ applyColor(key, inp.value, prev, txt); });
+  txt.addEventListener('change', function(){ if(/^#[0-9a-fA-F]{3,6}$/.test(txt.value)) applyColor(key, txt.value, prev, txt); });
+}
+function applyColor(key, val, prev, txt) {
+  if (!selNode) return;
+  selNode[key] = val;
+  prev.style.background = val;
+  txt.value = val;
+  redraw();
+}
+
+// ─────────────────────── HELPERS ─────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function bindI(id, fn)  { var el=document.getElementById(id); if(el) el.addEventListener('change',function(){fn(el.value);}); }
+function bindN(id, fn)  { var el=document.getElementById(id); if(el) el.addEventListener('change',function(){var v=parseInt(el.value);if(!isNaN(v)&&v>0)fn(v);}); }
+function bindSel(id,fn) { var el=document.getElementById(id); if(el) el.addEventListener('change',function(){fn(el.value);}); }
+function bindTA(id, fn) { var el=document.getElementById(id); if(el) el.addEventListener('input',function(){fn(el.value);}); }
+
+function deleteSelected() {
+  if (!selNode) return;
+  var id = selNode.id;
+  nodes = nodes.filter(function(n){return n.id!==id;});
+  conns = conns.filter(function(c){return c.from!==id&&c.to!==id;});
+  selNode=null; renderProp(); renderConnList(); redraw();
+}
+
+function renderConnList() {
+  var el = document.getElementById('connlist');
+  if (!conns.length) { el.innerHTML='<span style="color:var(--txm)">연결 없음</span>'; return; }
+  el.innerHTML = '';
+  conns.forEach(function(c, idx) {
+    var a=nodes.find(function(n){return n.id===c.from;}), b=nodes.find(function(n){return n.id===c.to;});
+    var an=a?(a.lbl||T[a.type].lbl):'?', bn=b?(b.lbl||T[b.type].lbl):'?';
+    var row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:4px;';
+    var span = document.createElement('span');
+    span.style.cssText='color:#ee8844;font-size:9px;line-height:1.4;';
+    span.textContent = an + ' \u2192 ' + bn;
+    var btn = document.createElement('button');
+    btn.textContent='\u2715';
+    btn.style.cssText='font-size:9px;padding:1px 5px;background:transparent;border:1px solid #cc3333;color:#cc3333;cursor:pointer;font-family:Barlow Condensed;font-weight:700;letter-spacing:1px;';
+    btn.setAttribute('data-idx', idx);
+    row.appendChild(span); row.appendChild(btn);
+    el.appendChild(row);
+  });
+  el.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-idx]');
+    if (!btn) return;
+    var idx = parseInt(btn.getAttribute('data-idx'));
+    if (!isNaN(idx)) { conns.splice(idx,1); renderConnList(); renderProp(); redraw(); }
+  }, {once:true});
+}
+
+function updateStats() {
+  var t={};
+  Object.keys(T).forEach(function(k){t[k]=0;});
+  nodes.forEach(function(n){ t[n.type]=(t[n.type]||0)+1; });
+  var el=document.getElementById('statsbox');
+  el.innerHTML=[
+    'Nodes: '+nodes.length+'&nbsp;&nbsp;Conns: '+conns.length,
+    'Rooms: '+t.room+'&nbsp;&nbsp;Waves: '+t.wave,
+    'Locks: '+t.lockwall+'&nbsp;&nbsp;Spawns: '+t.spawn,
+    'LowWall: '+t.wall_low+'&nbsp;&nbsp;HiWall: '+t.wall_high,
+    'Platforms: '+t.platform+'&nbsp;&nbsp;Stairs: '+t.stair,
+    'Cover: '+t.cover+'&nbsp;&nbsp;Hazard: '+t.hazard
+  ].join('<br>');
+}
+
+// ─────────────────────── TOOLBAR ─────────────────────────────────
+document.getElementById('palette').addEventListener('click', function(e) {
+  var item = e.target.closest('.pitem');
+  if (!item) return;
+  document.querySelectorAll('.pitem').forEach(function(i){i.classList.remove('sel');});
+  item.classList.add('sel');
+  selType = item.getAttribute('data-type');
+  setTool('place', document.getElementById('t-place'));
+});
+
+function setTool(t, btn) {
+  tool=t; connFrom=null;
+  document.querySelectorAll('.tb[id^="t-"]').forEach(function(b){b.classList.remove('on');});
+  if (btn) btn.classList.add('on');
+  cv.style.cursor = t==='place'?'crosshair':t==='delete'?'not-allowed':'default';
+  redraw();
+}
+function toggleSnap(btn) {
+  snapOn=!snapOn; btn.textContent=snapOn?'SNAP':'NO SNAP'; btn.classList.toggle('on',snapOn);
+}
+function zoom(d) { scale=Math.max(0.25,Math.min(3,scale+d)); document.getElementById('zlabel').textContent=Math.round(scale*100)+'%'; redraw(); }
+function resetView() { scale=1; offX=cv.width*0.08; offY=cv.height*0.12; document.getElementById('zlabel').textContent='100%'; redraw(); }
+function clearAll() { if(!confirm('모두 삭제?'))return; nodes=[];conns=[];selNode=null;connFrom=null;uid=1; renderProp();renderConnList();redraw();toast('CLEARED'); }
+function exportJSON() {
+  var d={mapName:document.getElementById('mapname').value,nodes:nodes,conns:conns,meta:{gridSize:gridSize,uid:uid}};
+  var blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(document.getElementById('mapname').value||'map')+'.json'; a.click();
+  toast('EXPORTED');
+}
+function importJSON() {
+  var inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.addEventListener('change', function() {
+    var f=inp.files[0]; if(!f)return;
+    var r=new FileReader();
+    r.addEventListener('load', function(){
+      try {
+        var d=JSON.parse(r.result);
+        nodes=d.nodes||[]; conns=d.conns||[];
+        if(d.meta){gridSize=d.meta.gridSize||60;uid=d.meta.uid||1;}
+        if(d.mapName)document.getElementById('mapname').value=d.mapName;
+        selNode=null; renderProp();renderConnList();redraw();toast('IMPORTED');
+      } catch(e){toast('IMPORT FAILED');}
+    });
+    r.readAsText(f);
+  });
+  inp.click();
+}
+function toast(msg) {
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2000);
+}
+
+// ─────────────────────── MODAL ────────────────────────────────────
+function openModal() { document.getElementById('modal').classList.add('open'); }
+document.getElementById('mod-cancel').addEventListener('click', function(){ document.getElementById('modal').classList.remove('open'); });
+document.getElementById('mod-ok').addEventListener('click', function(){
+  document.getElementById('modal').classList.remove('open');
+  runGenerate();
+});
+
+// ─────────────────────── GENERATOR ───────────────────────────────
+/*
+  MAP FLOW GENERATOR
+  ==================
+  방 하나를 채우는 게 아니라, 복수의 방+복도를 연결해 실제 맵 플로우를 생성.
+  
+  패턴:
+    linear  : 직선 A→B→C  (L4D2 챕터 스타일)
+    corner  : 꺾임 포함 (골목, 냉동 코너 등)
+    branch  : 중간에 분기 경로 (선택 루트)
+    loop    : 출발점으로 돌아오는 순환 동선
+    cross   : 십자형 허브 (창고 대형)
+
+  각 방은 roomW×roomH 그리드 단위로 배치되고
+  방 사이는 1~2칸 너비 복도로 연결됨.
+  각 방 내부는 Roboquest / Gunfire Reborn 스타일로 채움.
+*/
+
+function runGenerate() {
+  var layout   = document.getElementById('mod-style').value;
+  var sizeKey  = document.getElementById('mod-size').value;
+  var roomSty  = document.getElementById('mod-roomstyle').value;
+  var vert     = document.getElementById('mod-vert').value;
+  var density  = document.getElementById('mod-density').value;
+
+  var roomCounts = {short:[3,4], medium:[5,6], long:[7,9]};
+  var rc = roomCounts[sizeKey];
+  var numRooms = rc[0] + Math.floor(Math.random()*(rc[1]-rc[0]+1));
+  var dm = {sparse:0.5, normal:1, dense:1.5}[density];
+
+  // Room size pool (grid units)
+  var roomSizes = [
+    {w:7,h:5},{w:8,h:5},{w:8,h:6},{w:9,h:6},
+    {w:10,h:6},{w:10,h:7},{w:6,h:8},{w:12,h:7}
+  ];
+  // Corridor dims
+  var CORR_LEN = 3; // grid units long
+  var CORR_W   = 2; // grid units wide
+
+  var rnd   = function(a,b){return Math.floor(Math.random()*(b-a+1))+a;};
+  var maybe = function(p){return Math.random()<p;};
+
+  // ── Build room plan (abstract positions, no px yet) ──────────────────
+  // Each room: {rx, ry, rw, rh, type, label, exitDir}
+  // exitDir: 'right','down','left','up'
+  var plan = buildPlan(layout, numRooms, roomSizes, rnd, maybe);
+
+  // ── Offset entire plan so it starts near current canvas view ─────────
+  var baseX = 2, baseY = 2;
+  if (nodes.length > 0) {
+    baseX = Math.max.apply(null, nodes.map(function(n){return Math.ceil(n.x/gridSize + n.w);})) + 3;
+  }
+
+  // ── Instantiate rooms + corridors ────────────────────────────────────
+  plan.rooms.forEach(function(r, ri) {
+    var absX = baseX + r.rx;
+    var absY = baseY + r.ry;
+    var rtype = (ri===0) ? 'start' : (ri===plan.rooms.length-1) ? 'end' : 'room';
+    var rlbl  = (ri===0) ? 'START' : (ri===plan.rooms.length-1) ? 'EXIT' : r.label;
+    var faction = ['Clearance','Frostbound','P.I.','Watchers'][ri % 4];
+
+    // Room background node
+    nodes.push({
+      id:uid++, type:rtype, x:absX*gridSize, y:absY*gridSize,
+      w:r.rw, h:r.rh, lbl:rlbl, note:'Room '+(ri+1)+'/'+plan.rooms.length,
+      waveNum:null, spoilType:'runner', waveCount:2,
+      faction: (rtype==='room'?faction:''),
+      cBg:null, cBr:null, cTx:null
+    });
+
+    // Fill interior (skip start/end rooms — keep them clean)
+    if (rtype === 'room') {
+      var useStyle = roomSty==='mixed' ? (maybe(0.5)?'roboquest':'gunfire') : roomSty;
+      if (useStyle === 'roboquest') {
+        fillRoboquest(absX, absY, r.rw, r.rh, dm, vert, rnd, maybe);
+      } else {
+        fillGunfire(absX, absY, r.rw, r.rh, dm, vert, rnd, maybe);
+      }
+    }
+  });
+
+  // ── Instantiate corridors ─────────────────────────────────────────────
+  plan.corridors.forEach(function(c) {
+    var absX = baseX + c.cx;
+    var absY = baseY + c.cy;
+    nodes.push({
+      id:uid++, type:'corridor', x:absX*gridSize, y:absY*gridSize,
+      w:c.cw, h:c.ch, lbl:'복도', note:'',
+      waveNum:null, spoilType:'runner', waveCount:2, faction:'',
+      cBg:null, cBr:null, cTx:null
+    });
+  });
+
+  // ── Connect all waves to nearest lockwall ─────────────────────────────
+  var waves = nodes.filter(function(n){return n.type==='wave';});
+  var locks = nodes.filter(function(n){return n.type==='lockwall';});
+  waves.forEach(function(wv,i) {
+    var lw = locks[i] || locks[locks.length-1];
+    if (lw && !conns.some(function(c){return c.from===wv.id;})) {
+      conns.push({from:wv.id, to:lw.id});
+    }
+  });
+
+  selNode=null; renderProp(); renderConnList(); redraw();
+  toast('GENERATED — '+layout.toUpperCase()+' ('+numRooms+' rooms)');
+}
+
+// ══════════════════ LAYOUT PLANNERS ══════════════════════════════════════
+
+function buildPlan(layout, numRooms, roomSizes, rnd, maybe) {
+  if (layout === 'linear')  return planLinear(numRooms, roomSizes, rnd, maybe);
+  if (layout === 'corner')  return planCorner(numRooms, roomSizes, rnd, maybe);
+  if (layout === 'branch')  return planBranch(numRooms, roomSizes, rnd, maybe);
+  if (layout === 'loop')    return planLoop(numRooms, roomSizes, rnd, maybe);
+  if (layout === 'cross')   return planCross(numRooms, roomSizes, rnd, maybe);
+  return planBranch(numRooms, roomSizes, rnd, maybe);
+}
+
+var CORR_GAP = 3; // corridor length in grid units
+
+function pickRoom(sizes, rnd) {
+  return sizes[rnd(0, sizes.length-1)];
+}
+
+// Corridor connecting two rooms:
+// dir = 'right': room A exits right, corridor goes right, room B starts after
+// returns {corridors:[], nextRx, nextRy}
+function connectRight(ax, ay, aw, ah, bw, bh) {
+  // corridor fills the gap between rooms, centered vertically
+  var cy = ay + Math.floor(ah/2) - 1;
+  return {
+    corridor: {cx: ax+aw, cy: cy, cw: CORR_GAP, ch: 2},
+    bx: ax+aw+CORR_GAP,
+    by: ay + Math.floor(ah/2) - Math.floor(bh/2)
+  };
+}
+function connectDown(ax, ay, aw, ah, bw, bh) {
+  var cx = ax + Math.floor(aw/2) - 1;
+  return {
+    corridor: {cx: cx, cy: ay+ah, cw: 2, ch: CORR_GAP},
+    bx: ax + Math.floor(aw/2) - Math.floor(bw/2),
+    by: ay+ah+CORR_GAP
+  };
+}
+function connectLeft(ax, ay, aw, ah, bw, bh) {
+  var cy = ay + Math.floor(ah/2) - 1;
+  return {
+    corridor: {cx: ax-CORR_GAP-bw+bw, cy: cy, cw: CORR_GAP, ch: 2},
+    // corridor between bx+bw and ax
+    bx: ax - CORR_GAP - bw,
+    by: ay + Math.floor(ah/2) - Math.floor(bh/2)
+  };
+}
+function connectUp(ax, ay, aw, ah, bw, bh) {
+  var cx = ax + Math.floor(aw/2) - 1;
+  return {
+    corridor: {cx: cx, cy: ay-CORR_GAP-bh+bh, cw: 2, ch: CORR_GAP},
+    bx: ax + Math.floor(aw/2) - Math.floor(bw/2),
+    by: ay - CORR_GAP - bh
+  };
+}
+
+// ── Linear: rooms in a straight horizontal line ────────────────────────
+function planLinear(n, sizes, rnd, maybe) {
+  var rooms = [], corridors = [];
+  var cx = 0, cy = 0;
+  for (var i=0; i<n; i++) {
+    var sz = pickRoom(sizes, rnd);
+    var label = ['청과물 코너','냉동 통로','음료 창고','정육 코너','제과 코너','창고 A','창고 B','Safe Zone'][i % 8];
+    rooms.push({rx:cx, ry:cy, rw:sz.w, rh:sz.h, label:label});
+    if (i < n-1) {
+      var next = pickRoom(sizes, rnd);
+      var conn = connectRight(cx, cy, sz.w, sz.h, next.w, next.h);
+      corridors.push(conn.corridor);
+      cx = conn.bx; cy = conn.by;
+    }
+  }
+  return {rooms:rooms, corridors:corridors};
+}
+
+// ── Corner: alternates right→down (or down→right) creating bends ──────
+function planCorner(n, sizes, rnd, maybe) {
+  var rooms = [], corridors = [];
+  var cx = 0, cy = 0;
+  var dir = 'right'; // alternates
+  for (var i=0; i<n; i++) {
+    var sz = pickRoom(sizes, rnd);
+    var labels = ['입구 통로','청과물 코너','꺾인 복도','냉동 코너','배후 창고','출구 통로','지하 통로','비밀 구역'];
+    rooms.push({rx:cx, ry:cy, rw:sz.w, rh:sz.h, label:labels[i%labels.length]});
+    if (i < n-1) {
+      var next = pickRoom(sizes, rnd);
+      var conn;
+      if (dir === 'right') {
+        conn = connectRight(cx, cy, sz.w, sz.h, next.w, next.h);
+        dir = maybe(0.6) ? 'down' : 'right';
+      } else {
+        conn = connectDown(cx, cy, sz.w, sz.h, next.w, next.h);
+        dir = maybe(0.6) ? 'right' : 'down';
+      }
+      corridors.push(conn.corridor);
+      cx = conn.bx; cy = conn.by;
+    }
+  }
+  return {rooms:rooms, corridors:corridors};
+}
+
+// ── Branch: main path + 1~2 side rooms attached to middle rooms ────────
+function planBranch(n, sizes, rnd, maybe) {
+  var rooms = [], corridors = [];
+  // Main path (n-1 or n-2 rooms, then branch)
+  var mainN = Math.max(3, Math.floor(n * 0.65));
+  var branchN = n - mainN;
+
+  var cx = 0, cy = 0;
+  var midRooms = []; // track mid-rooms for branch attachment
+
+  for (var i=0; i<mainN; i++) {
+    var sz = pickRoom(sizes, rnd);
+    var label = ['입구','청과물 코너','냉동 통로','음료 창고','Safe Zone','정육 코너','창고','EXIT'][i%8];
+    rooms.push({rx:cx, ry:cy, rw:sz.w, rh:sz.h, label:label});
+    if (i>=1 && i<=mainN-2) midRooms.push({idx:rooms.length-1, rx:cx, ry:cy, rw:sz.w, rh:sz.h});
+    if (i < mainN-1) {
+      var next = pickRoom(sizes, rnd);
+      var conn = connectRight(cx, cy, sz.w, sz.h, next.w, next.h);
+      corridors.push(conn.corridor);
+      cx = conn.bx; cy = conn.by;
+    }
+  }
+
+  // Branch rooms attached downward from mid rooms
+  for (var b=0; b<branchN && midRooms.length>0; b++) {
+    var pick = midRooms[rnd(0, midRooms.length-1)];
+    var sz2 = pickRoom(sizes, rnd);
+    var branchLabels = ['비밀 통로','P.I. 캐시','Watcher 구역','숨겨진 창고'];
+    var conn2 = connectDown(pick.rx, pick.ry, pick.rw, pick.rh, sz2.w, sz2.h);
+    // Offset branch room slightly so it doesn't overlap
+    conn2.bx += rnd(-1,1);
+    corridors.push(conn2.corridor);
+    rooms.push({rx:conn2.bx, ry:conn2.by, rw:sz2.w, rh:sz2.h, label:branchLabels[b%branchLabels.length]});
+  }
+
+  return {rooms:rooms, corridors:corridors};
+}
+
+// ── Loop: rooms form a circuit (players can flank) ────────────────────
+function planLoop(n, sizes, rnd, maybe) {
+  var rooms = [], corridors = [];
+  // Make a rectangle of rooms: top row right, then down, then left
+  var topN  = Math.max(2, Math.round(n*0.45));
+  var sideN = Math.max(1, Math.round(n*0.2));
+  var botN  = n - topN - sideN*2;
+  if (botN < 1) botN = 1;
+
+  var cx = 0, cy = 0;
+  var allSz = [];
+  for (var i=0; i<n; i++) allSz.push(pickRoom(sizes, rnd));
+
+  var labels = ['START','청과물 코너','냉동 통로','우회 경로','음료 창고','비밀 통로','정육 코너','Safe Zone','EXIT'];
+  var ri = 0;
+
+  // Top row →
+  for (var i=0; i<topN; i++) {
+    var sz = allSz[ri++];
+    rooms.push({rx:cx, ry:cy, rw:sz.w, rh:sz.h, label:labels[rooms.length%labels.length]});
+    if (i<topN-1) {
+      var conn=connectRight(cx,cy,sz.w,sz.h,allSz[ri]?allSz[ri].w:sz.w,allSz[ri]?allSz[ri].h:sz.h);
+      corridors.push(conn.corridor); cx=conn.bx; cy=conn.by;
+    }
+  }
+  // Right side ↓
+  var lastTop = rooms[rooms.length-1];
+  for (var i=0; i<sideN; i++) {
+    var sz=allSz[ri++]||pickRoom(sizes,rnd);
+    var prev=rooms[rooms.length-1];
+    var conn=connectDown(prev.rx,prev.ry,prev.rw,prev.rh,sz.w,sz.h);
+    corridors.push(conn.corridor);
+    rooms.push({rx:conn.bx,ry:conn.by,rw:sz.w,rh:sz.h,label:labels[rooms.length%labels.length]});
+  }
+  // Bottom row ← (reversed)
+  var lastRight = rooms[rooms.length-1];
+  cx = lastRight.rx; cy = lastRight.ry;
+  for (var i=0; i<botN; i++) {
+    var sz=allSz[ri++]||pickRoom(sizes,rnd);
+    var prev=rooms[rooms.length-1];
+    var conn=connectLeft(prev.rx,prev.ry,prev.rw,prev.rh,sz.w,sz.h);
+    corridors.push(conn.corridor);
+    rooms.push({rx:conn.bx,ry:conn.by,rw:sz.w,rh:sz.h,label:labels[rooms.length%labels.length]});
+  }
+  // Left side ↑ (close the loop — just add corridor back, no room)
+  if (sideN > 0) {
+    var lastBot = rooms[rooms.length-1];
+    var conn=connectUp(lastBot.rx,lastBot.ry,lastBot.rw,lastBot.rh,allSz[0].w,allSz[0].h);
+    corridors.push(conn.corridor);
+  }
+
+  return {rooms:rooms, corridors:corridors};
+}
+
+// ── Cross: central hub with arms going in 4 directions ───────────────
+function planCross(n, sizes, rnd, maybe) {
+  var rooms = [], corridors = [];
+  // Hub room (center)
+  var hubSz = {w:8, h:8};
+  var hubX = 12, hubY = 8;
+  var labels = ['허브 창고','청과물 코너','냉동 통로','음료 창고','Safe Zone','정육 코너','비밀 구역','Watcher 구역'];
+
+  rooms.push({rx:hubX, ry:hubY, rw:hubSz.w, rh:hubSz.h, label:'중앙 허브'});
+
+  // Arms: right, down, left, up
+  var arms = ['right','down','left','up'];
+  var armN = Math.min(n-1, 4);
+  var armLen = Math.max(1, Math.floor((n-1)/armN));
+
+  for (var a=0; a<armN; a++) {
+    var dir = arms[a];
+    var cx2 = hubX, cy2 = hubY;
+    var pw = hubSz.w, ph = hubSz.h;
+    for (var k=0; k<armLen; k++) {
+      var sz = pickRoom(sizes, rnd);
+      var conn;
+      if (dir==='right') conn = connectRight(cx2,cy2,pw,ph,sz.w,sz.h);
+      else if (dir==='down') conn = connectDown(cx2,cy2,pw,ph,sz.w,sz.h);
+      else if (dir==='left') conn = connectLeft(cx2,cy2,pw,ph,sz.w,sz.h);
+      else conn = connectUp(cx2,cy2,pw,ph,sz.w,sz.h);
+      corridors.push(conn.corridor);
+      rooms.push({rx:conn.bx,ry:conn.by,rw:sz.w,rh:sz.h,label:labels[rooms.length%labels.length]});
+      cx2=conn.bx; cy2=conn.by; pw=sz.w; ph=sz.h;
+    }
+  }
+
+  return {rooms:rooms, corridors:corridors};
+}
+
+// ══════════════════ ROOM INTERIOR FILLERS ════════════════════════════════
+
+function mkNode(type, ax, ay, gx, gy, gw, gh, lbl, note, extras) {
+  var cfg = T[type];
+  var n = {
+    id:uid++, type:type,
+    x:(ax+gx)*gridSize, y:(ay+gy)*gridSize,
+    w:gw||cfg.w, h:gh||cfg.h,
+    lbl:lbl||cfg.lbl, note:note||'',
+    waveNum: type==='wave' ? nodes.filter(function(n){return n.type==='wave';}).length+1 : null,
+    spoilType:'runner', waveCount:2, faction:'',
+    cBg:null, cBr:null, cTx:null
+  };
+  if (extras) Object.keys(extras).forEach(function(k){n[k]=extras[k];});
+  nodes.push(n);
+  return n;
+}
+
+function fillRoboquest(ax, ay, W, H, dm, vert, rnd, maybe) {
+  // Entrance left / Exit right + lockwall
+  mkNode('door',   ax,ay, 0, Math.floor(H/2)-1, 1,1, '입구 Door','');
+  mkNode('door',   ax,ay, W-1, Math.floor(H/2)-1, 1,1, '출구 Door','');
+  var lw = mkNode('lockwall', ax,ay, W-2, Math.floor(H/2)-1, 1,1, 'LOCK','');
+  // Wave trigger center
+  var wv = mkNode('wave', ax,ay, Math.floor(W/2)-1, Math.floor(H/2)-1, 2,1, 'WAVE','');
+  conns.push({from:wv.id, to:lw.id});
+
+  // Cover rows (top & bottom thirds)
+  var numLow = Math.round(3*dm);
+  for (var i=0;i<numLow;i++) mkNode('wall_low',ax,ay, rnd(1,W-4), Math.floor(H*0.65)+rnd(-1,1), rnd(1,3),1,'Low Wall','');
+  var numLow2 = Math.round(2*dm);
+  for (var i2=0;i2<numLow2;i2++) mkNode('wall_low',ax,ay, rnd(1,W-4), Math.floor(H*0.2)+rnd(-1,1), rnd(1,2),1,'Low Wall','');
+
+  // High wall blockers
+  var numHigh = Math.round(1.5*dm);
+  for (var i3=0;i3<numHigh;i3++) mkNode('wall_high',ax,ay, rnd(2,W-4), rnd(2,H-3), 1, rnd(1,2),'High Wall','');
+
+  // Pillars
+  var numP = Math.round(2*dm);
+  for (var i4=0;i4<numP;i4++) mkNode('pillar',ax,ay, rnd(2,W-2), rnd(1,H-2), 1,1,'Pillar','');
+
+  // Spawns along walls
+  var numSp = Math.round(3*dm);
+  for (var i5=0;i5<numSp;i5++) mkNode('spawn',ax,ay, rnd(1,W-2), maybe(0.5)?0:H-1, 1,1,'Spawn','');
+
+  if(maybe(0.55)) mkNode('wall_dest',ax,ay, rnd(2,W-4), rnd(2,H-3), rnd(2,3),1,'Dest. Wall','');
+  if(maybe(0.45)) mkNode('hazard',   ax,ay, rnd(1,W-3), rnd(1,H-2), rnd(2,3),1,'Hazard','');
+  if(maybe(0.7))  mkNode('loot',     ax,ay, rnd(W-4,W-2), rnd(1,H-2), 1,1,'Loot Cache','');
+  if(maybe(0.45)) mkNode('vent',     ax,ay, rnd(1,W-2), rnd(0,1), 1,1,'Vent Panel','');
+
+  // Vertical
+  if(vert !== 'flat') {
+    var pw=rnd(3,5), px=maybe(0.5)?1:W-pw-1;
+    mkNode('platform',ax,ay, px, rnd(1,H-4), pw,2,'Platform 2F','');
+    mkNode('stair',   ax,ay, px+(maybe(0.5)?pw:0), rnd(2,H-3), 1,2,'Stair','');
+    if(vert==='full') {
+      mkNode('platform',ax,ay, rnd(2,W-5), rnd(1,H-4), rnd(3,4),2,'Platform 2F','');
+      mkNode('stair',   ax,ay, rnd(1,W-2), rnd(2,H-3), 1,2,'Stair','');
+    }
+  }
+}
+
+function fillGunfire(ax, ay, W, H, dm, vert, rnd, maybe) {
+  // 4-direction doors; east side has lockwall
+  mkNode('door',    ax,ay, Math.floor(W/2),0, 1,1,'북쪽 문','');
+  mkNode('door',    ax,ay, Math.floor(W/2),H-1, 1,1,'남쪽 문','');
+  mkNode('door',    ax,ay, 0,Math.floor(H/2), 1,1,'서쪽 문','');
+  var lw = mkNode('lockwall',ax,ay, W-2,Math.floor(H/2), 1,1,'LOCK','');
+  var wv = mkNode('wave',    ax,ay, Math.floor(W/2)-1, Math.floor(H/2)-1, 2,2,'WAVE CENTER','');
+  conns.push({from:wv.id, to:lw.id});
+
+  // Outer cover ring
+  var rp=1;
+  for (var x=rp+rnd(0,1); x<W-rp-1; x+=rnd(2,3)) if(maybe(0.7*dm)) mkNode('wall_low',ax,ay,x,rp,rnd(1,2),1,'Low Wall','');
+  for (var x2=rp+rnd(0,1); x2<W-rp-1; x2+=rnd(2,3)) if(maybe(0.7*dm)) mkNode('wall_low',ax,ay,x2,H-rp-1,rnd(1,2),1,'Low Wall','');
+  for (var y=rp+2; y<H-rp-2; y+=rnd(2,3)) if(maybe(0.5*dm)) mkNode('wall_low',ax,ay,rp,y,1,1,'Low Wall','');
+  for (var y2=rp+2; y2<H-rp-2; y2+=rnd(2,3)) if(maybe(0.5*dm)) mkNode('wall_low',ax,ay,W-rp-1,y2,1,1,'Low Wall','');
+
+  // Corner pillars
+  [[rp,rp],[W-rp-1,rp],[rp,H-rp-1],[W-rp-1,H-rp-1]].forEach(function(pos){
+    if(maybe(0.8)) mkNode('pillar',ax,ay,pos[0],pos[1],1,1,'Pillar','');
+  });
+
+  // Center obstacles
+  var nc=Math.round(2*dm);
+  for(var i=0;i<nc;i++) mkNode('wall_high',ax,ay,Math.floor(W/2)+rnd(-2,2),Math.floor(H/2)+rnd(-2,2),1,1,'High Wall','');
+  var nd=Math.round(2.5*dm);
+  for(var i2=0;i2<nd;i2++) mkNode('wall_dest',ax,ay,rnd(2,W-3),rnd(2,H-3),1,1,'Dest. Wall','');
+  var ncov=Math.round(2*dm);
+  for(var i3=0;i3<ncov;i3++) mkNode('cover',ax,ay,rnd(2,W-3),rnd(2,H-3),1,1,'Cover','');
+
+  // 4-direction spawns
+  mkNode('spawn',ax,ay,Math.floor(W/2),1,1,1,'Spawn N','');
+  mkNode('spawn',ax,ay,Math.floor(W/2),H-2,1,1,'Spawn S','');
+  mkNode('spawn',ax,ay,1,Math.floor(H/2),1,1,'Spawn W','');
+  mkNode('spawn',ax,ay,W-2,Math.floor(H/2),1,1,'Spawn E','');
+
+  if(maybe(0.45)) mkNode('hazard',ax,ay,rnd(2,W-4),rnd(2,H-3),rnd(1,2),1,'Hazard','');
+  if(maybe(0.4))  mkNode('vent',  ax,ay,rnd(1,W-2),maybe(0.5)?0:H-1,1,1,'Vent Panel','');
+  mkNode('loot', ax,ay,rnd(1,W-2),rnd(1,H-2),1,1,'Loot Cache','');
+  if(maybe(0.5)) mkNode('checkpoint',ax,ay,rnd(1,W-2),rnd(1,H-2),1,1,'Checkpoint','');
+
+  // Vertical
+  if(vert !== 'flat') {
+    var side=maybe(0.5), px=side?1:W-5;
+    mkNode('platform',ax,ay,px,rnd(1,H-4),rnd(3,4),2,'Platform 2F','');
+    mkNode('stair',   ax,ay,px+(side?rnd(3,4):-1),rnd(2,H-3),1,2,'Stair','');
+    if(vert==='full') {
+      mkNode('platform',ax,ay,rnd(2,W-5),rnd(1,H-4),rnd(3,4),2,'Platform 2F (B)','');
+      mkNode('ramp',    ax,ay,rnd(2,W-3),rnd(2,H-3),2,1,'Ramp','');
+    }
+  }
+}
+
+// ─────────────────────── EXAMPLE MAP ─────────────────────────────
+function loadExample() {
+  var G = gridSize;
+  function mk(type,x,y,w,h,lbl,note,extras) {
+    var n={id:uid++,type:type,x:x*G,y:y*G,w:w,h:h,lbl:lbl,note:note||'',waveNum:null,spoilType:'runner',waveCount:2,faction:'',cBg:null,cBr:null,cTx:null};
+    if(extras)Object.keys(extras).forEach(function(k){n[k]=extras[k];});
+    return n;
+  }
+  nodes=[
+    mk('start',    0,   2,   2,2,'START',     '플레이어 시작'),
+    mk('corridor', 2,   2.5, 1,1,'입구 통로', ''),
+    mk('room',     3,   0.5, 5,4,'청과물 코너','Wave 1 구역',{faction:'Clearance'}),
+    mk('wave',     5,   1.5, 2,2,'WAVE',       '',{waveNum:1,spoilType:'runner',waveCount:2}),
+    mk('spawn',    3.3, 0.8, 1,1,'Spawn',      '북쪽'),
+    mk('spawn',    6.5, 0.8, 1,1,'Spawn',      '동쪽'),
+    mk('wall_low', 3.5, 2.5, 2,1,'Low Wall',  '엄폐 가능'),
+    mk('wall_low', 5.5, 1,   1,1,'Low Wall',  ''),
+    mk('pillar',   4,   1.2, 1,1,'Pillar',    ''),
+    mk('platform', 3.5, 0.5, 3,1.5,'Platform 2F','높은 플랫폼'),
+    mk('stair',    6.3, 0.5, 1,2,'Stair',     '2F 접근'),
+    mk('lockwall', 7.8, 1.8, 1,2,'LOCK',      'Wave 1 클리어 시 해제'),
+    mk('corridor', 8.8, 2.3, 1,1,'통로',      ''),
+    mk('safe',     9.8, 1,   3,3,'Safe Zone', 'Frostbound 거점',{faction:'Frostbound'}),
+    mk('loot',     11.2,3.2, 1,1,'Loot Cache',''),
+    mk('end',      13,  1.8, 2,2,'EXIT',      '다음 스테이지')
+  ];
+  var wv=nodes.find(function(n){return n.type==='wave';});
+  var lw=nodes.find(function(n){return n.type==='lockwall';});
+  if(wv&&lw) conns=[{from:wv.id,to:lw.id}];
+  selNode=null; renderProp(); renderConnList(); redraw();
+}
+
+// ─────────────────────── INIT ─────────────────────────────────────
+resize();
+offX = cv.width * 0.06;
+offY = cv.height * 0.12;
+setTimeout(loadExample, 60);
+</script>
+</body>
+</html>
